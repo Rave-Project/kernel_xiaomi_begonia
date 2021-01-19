@@ -2,6 +2,7 @@
 # bot key -> @Peppe289build_bot
 BOT_API_KEY="1563558743:AAH4nOnpWPeBsOjksWUgzqbPpGnaXutIZx0"
 
+#PLOX DON'T SHARE
 
 #download repo
 # git rev-parse --abbrev-ref HEAD
@@ -77,7 +78,7 @@ elif [ "$INPUT" == "2" ]; then
     
     git clone -b $BRANCH https://github.com/Peppe289/$REPO.git
     DEVICE="Begonia" # info for push
-    CHAT_ID="NONE" # Laveneder support
+    CHAT_ID="-350273779" # Private message for now
     BRANCH_ANYKERNEL="begonia" #chose branch to patch
     echo "Build for Begonia"
     echo " Using GCC 4.9"
@@ -149,7 +150,6 @@ elif [ "$FILESIZE" -lt "7340032" ]; then
         -d text="BUILD FAILLED"
 
 fi;
-
 
 
 
