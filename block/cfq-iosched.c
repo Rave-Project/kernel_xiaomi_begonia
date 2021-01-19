@@ -36,6 +36,7 @@ static u64 cfq_slice_idle = NSEC_PER_SEC / 125;
 static u64 cfq_group_idle = NSEC_PER_SEC / 125;
 static const u64 cfq_target_latency = (u64)NSEC_PER_SEC * 3/10; /* 300 ms */
 static const int cfq_hist_divisor = 4;
+extern struct blkcg *blkcg_bg;
 
 /*
  * offset from end of queue service tree for idle class
@@ -1599,6 +1600,14 @@ static void cfq_cpd_init(struct blkcg_policy_data *cpd)
 
 	if (cpd_to_blkcg(cpd) == &blkcg_root)
 		weight *= 2;
+
+	if (pd->blkg->blkcg == &blkcg_root) {
+		cgd->weight = 1000;
+		cgd->group_idle = 2000 * NSEC_PER_USEC;
+	} else if (pd->blkg->blkcg == blkcg_bg) {
+		cgd->weight = 200;
+		cgd->group_idle = 0;
+	}
 
 	cgd->weight = weight;
 	cgd->leaf_weight = weight;
