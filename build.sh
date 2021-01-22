@@ -78,7 +78,7 @@ elif [ "$INPUT" == "2" ]; then
     
     git clone -b $BRANCH https://github.com/Peppe289/$REPO.git
     DEVICE="Begonia" # info for push
-    CHAT_ID="-350273779" # Private message for now
+    CHAT_ID="-1001340890952" # Lavender for now
     BRANCH_ANYKERNEL="begonia" #chose branch to patch
     echo "Build for Begonia"
     echo " Using GCC 4.9"
