@@ -78,7 +78,7 @@ elif [ "$INPUT" == "2" ]; then
     
     git clone -b $BRANCH https://github.com/Peppe289/$REPO.git
     DEVICE="Begonia" # info for push
-    CHAT_ID="-1001340890952" # Lavender for now
+    CHAT_ID="-1001453427722" # Begonia
     BRANCH_ANYKERNEL="begonia" #chose branch to patch
     echo "Build for Begonia"
     echo " Using GCC 4.9"
@@ -151,7 +151,8 @@ elif [ "$FILESIZE" -lt "7340032" ]; then
 
 fi;
 
-
+cd ..
+rm -rf AnyKernel
 
 
 
