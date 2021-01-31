@@ -104,13 +104,13 @@ export ARCH=arm64 && export SUBARCH=arm64
 START=$(date +"%s")
 cd $REPO
 make O=out $DEFCONFIG
-make O=out -j2
+make O=out -j2 | tee kernel.log
 END=$(date +"%s")
 DIFF=$(($END - $START))
 
 BRANCH_INFO=$(git rev-parse --abbrev-ref HEAD)
 LAST_COMMIT=$(git log --pretty=format:'"%h : %s"' -1)
-
+LOG=kernel.log
 #PATCH KERNEL
 git clone -b $BRANCH_ANYKERNEL $ANYKERNEL_REPO
 cp out/arch/arm64/boot/Image.gz-dtb AnyKernel/
@@ -133,6 +133,12 @@ if [ "$FILESIZE" -gt "7340032" ]; then
         -F "disable_web_page_preview=true" \
         -F "parse_mode=html" \
         -F caption="Build took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s)."
+
+    curl -F document=@$LOG "https://api.telegram.org/bot$BOT_API_KEY/sendDocument" \
+        -F chat_id="$CHAT_ID" \
+        -F "disable_web_page_preview=true" \
+        -F "parse_mode=html"
+
 
     curl -s -X POST "https://api.telegram.org/bot$BOT_API_KEY/sendMessage" \
         -d chat_id="$CHAT_ID" \
