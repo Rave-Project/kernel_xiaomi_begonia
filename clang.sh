@@ -8,7 +8,7 @@ BOT_API_KEY="1563558743:AAH4nOnpWPeBsOjksWUgzqbPpGnaXutIZx0"
 # git rev-parse --abbrev-ref HEAD
 # git log --pretty=format:'"%h : %s"' -1
 ANYKERNEL_REPO="https://github.com/Peppe289/AnyKernel.git"
-
+REPO="kernel_xiaomi_sdm660"
 DEVICE="Lavender"
 TOOLCHAIN_INFO="Proton Clang 12"
 CHAT_ID="-1001340890952" # Laveneder support
@@ -29,6 +29,8 @@ export ARCH=arm64 && export SUBARCH=arm64
 # build
 START=$(date +"%s")
 cd $REPO
+
+make O=out lavender-perf_defconfig
 
 PATH="/home/runner/work/Ubuntu-SSH/Ubuntu-SSH/proton-clang/bin:${PATH}" \
 
