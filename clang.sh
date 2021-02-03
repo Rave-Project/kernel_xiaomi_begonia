@@ -10,7 +10,7 @@ BOT_API_KEY="1563558743:AAH4nOnpWPeBsOjksWUgzqbPpGnaXutIZx0"
 ANYKERNEL_REPO="https://github.com/Peppe289/AnyKernel.git"
 REPO="kernel_xiaomi_sdm660"
 DEVICE="Lavender"
-TOOLCHAIN_INFO="Proton Clang 12"
+TOOLCHAIN_INFO="Proton Clang 13"
 CHAT_ID="-1001340890952" # Laveneder support
 BRANCH_ANYKERNEL="AnyKernel" #chose branch to patch
 
