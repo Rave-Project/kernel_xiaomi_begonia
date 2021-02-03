@@ -11,6 +11,8 @@ ANYKERNEL_REPO="https://github.com/Peppe289/AnyKernel.git"
 
 DEVICE="Lavender"
 TOOLCHAIN_INFO="Proton Clang 12"
+CHAT_ID="-1001340890952" # Laveneder support
+BRANCH_ANYKERNEL="AnyKernel" #chose branch to patch
 
 # build export
 export KBUILD_BUILD_USER="Peppe289"
