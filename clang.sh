@@ -7,99 +7,19 @@ BOT_API_KEY="1563558743:AAH4nOnpWPeBsOjksWUgzqbPpGnaXutIZx0"
 #download repo
 # git rev-parse --abbrev-ref HEAD
 # git log --pretty=format:'"%h : %s"' -1
-BRANCH="HMP-oldcam"
-REPO="kernel_xiaomi_sdm660"
 ANYKERNEL_REPO="https://github.com/Peppe289/AnyKernel.git"
+
+DEVICE="Lavender"
+TOOLCHAIN_INFO="Proton Clang 12"
 
 # build export
 export KBUILD_BUILD_USER="Peppe289"
 export KBUILD_BUILD_HOST="RaveRules"
 ZIP="Rave"
 
-
-
 rm -rf $REPO/AnyKernel/
 
-# chose
-echo "Chose group: "
-echo " 1) Laveneder support"
-echo " 2) Begonia support"
-
-read INPUT
-
-if [ "$INPUT" == "1" ]; then
-
-    CHAT_ID="-1001340890952" # Laveneder support
-    BRANCH_ANYKERNEL="AnyKernel" #chose branch to patch
-    echo "Build for lavender "
-    DEVICE="Lavender" # info for push 
-    echo "chose toolchain "
-    echo " 1) GCC 4.9"
-    echo " 2) GCC 10.2"
-    DEFCONFIG="lavender-perf_defconfig"
-    read TOOL
-
-    git clone -b $BRANCH https://github.com/Peppe289/$REPO.git
-
-    # TOOLCHAIN 4.9
-    if [ "$TOOL" == "1" ]; then
-        echo "ur chose is GGC 4.9"
-    
-        # download toolchain
-        git clone https://github.com/ZyCromerZ/aarch64-linux-android-4.9/
-        git clone https://github.com/ZyCromerZ/arm-linux-androideabi-4.9/
-        # toolchain
-        
-        export CROSS_COMPILE=/home/runner/work/Ubuntu-SSH/Ubuntu-SSH/aarch64-linux-android-4.9/bin/aarch64-linux-android-
-        export CROSS_COMPILE_ARM32=/home/runner/work/Ubuntu-SSH/Ubuntu-SSH/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
-        
-        # info for push
-        TOOLCHAIN_INFO="GCC 4.9"
-    
-    elif [ "$TOOL" == "2" ]; then
-        echo "ur chose is GGC 10"
-        
-        # download toolchain
-        git clone https://github.com/arter97/arm64-gcc
-        git clone https://github.com/arter97/arm32-gcc
-        
-        # toolchain
-        export CROSS_COMPILE=/home/runner/work/Ubuntu-SSH/Ubuntu-SSH/arm64-gcc/bin/aarch64-elf-
-        export CROSS_COMPILE_ARM32=/home/runner/work/Ubuntu-SSH/Ubuntu-SSH/arm32-gcc/bin/arm-eabi-
-        
-        # info for push
-        TOOLCHAIN_INFO="GCC 10"
-        
-    fi;
-
-elif [ "$INPUT" == "2" ]; then
-
-    DEFCONFIG="begonia_user_defconfig"
-    
-    git clone -b $BRANCH https://github.com/Peppe289/$REPO.git
-    DEVICE="Begonia" # info for push
-    CHAT_ID="-1001340890952" # Lavender for now
-    BRANCH_ANYKERNEL="begonia" #chose branch to patch
-    echo "Build for Begonia"
-    echo " Using GCC 4.9"
-    git clone -b $BRANCH https://github.com/Peppe289/$REPO.git
-
-    # TOOLCHAIN 4.9
-    # download toolchain
-
-PATH="/home/runner/work/Ubuntu-SSH/Ubuntu-SSH/proton-clang/bin:${PATH}" \
-make -j$(nproc --all) O=out \
-                      ARCH=arm64 \
-                      CC=clang \
-                      CLANG_TRIPLE=aarch64-linux-gnu- \
-                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                      CROSS_COMPILE=aarch64-linux-gnu- | tee kernel.log
-
-
-    # info for push
-    TOOLCHAIN_INFO="GCC 4.9"
-fi;
-
+git clone --depth=1 https://github.com/kdrag0n/proton-clang.git
 
 # setting arm64
 export ARCH=arm64 && export SUBARCH=arm64
@@ -107,8 +27,16 @@ export ARCH=arm64 && export SUBARCH=arm64
 # build
 START=$(date +"%s")
 cd $REPO
-make O=out $DEFCONFIG
-make O=out -j2
+
+PATH="/home/runner/work/Ubuntu-SSH/Ubuntu-SSH/proton-clang/bin:${PATH}" \
+
+make -j$(nproc --all) O=out \
+                      ARCH=arm64 \
+                      CC=clang \
+                      CLANG_TRIPLE=aarch64-linux-gnu- \
+                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                      CROSS_COMPILE=aarch64-linux-gnu- | tee kernel.log
+
 END=$(date +"%s")
 DIFF=$(($END - $START))
 
