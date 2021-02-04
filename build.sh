@@ -7,8 +7,8 @@ BOT_API_KEY="1563558743:AAH4nOnpWPeBsOjksWUgzqbPpGnaXutIZx0"
 #download repo
 # git rev-parse --abbrev-ref HEAD
 # git log --pretty=format:'"%h : %s"' -1
-BRANCH="HMP-oldcam"
-REPO="kernel_xiaomi_sdm660"
+BRANCH="next"
+REPO="kernel_xiaomi_begonia"
 ANYKERNEL_REPO="https://github.com/Peppe289/AnyKernel.git"
 
 # build export
