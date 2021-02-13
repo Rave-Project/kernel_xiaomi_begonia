@@ -29,7 +29,7 @@ read INPUT
 
 if [ "$INPUT" == "1" ]; then
 
-    CHAT_ID="-1001340890952" # Laveneder support
+    CHAT_ID="-1001441002138" # Laveneder channel log
     BRANCH_ANYKERNEL="AnyKernel" #chose branch to patch
     echo "Build for lavender "
     DEVICE="Lavender" # info for push 
