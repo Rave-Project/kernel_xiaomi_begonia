@@ -153,7 +153,7 @@ elif [ "$FILESIZE" -lt "7340032" ]; then
         -d chat_id="$CHAT_ID" \
         -d "disable_web_page_preview=true" \
         -d "parse_mode=html" \
-        -d text="BUILD FAILLED"
+        -d text="BUILD FAILED"
 
 fi;
 
