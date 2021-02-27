@@ -1,3 +1,7 @@
+# config git
+git config --global user.email "gsperanza204@gmail.com"
+git config --global user.name "Peppe289"
+
 
 # bot key -> @Peppe289build_bot
 BOT_API_KEY="1563558743:AAH4nOnpWPeBsOjksWUgzqbPpGnaXutIZx0"
@@ -31,19 +35,21 @@ if [ "$INPUT" == "1" ]; then
 
     CHAT_ID="-1001441002138" # Laveneder channel log
     BRANCH_ANYKERNEL="AnyKernel" #chose branch to patch
+    DEFCONFIG="lavender-perf_defconfig"
+    
     echo "Build for lavender "
     DEVICE="Lavender" # info for push 
     echo "chose toolchain "
     echo " 1) GCC 4.9"
     echo " 2) GCC 10.2"
-    DEFCONFIG="lavender-perf_defconfig"
+    echo " 3) Proton Clang 13"
     read TOOL
 
     git clone -b $BRANCH https://github.com/Peppe289/$REPO.git
 
     # TOOLCHAIN 4.9
     if [ "$TOOL" == "1" ]; then
-        echo "ur chose is GGC 4.9"
+        echo "ur chose is GCC 4.9"
     
         # download toolchain
         git clone https://github.com/ZyCromerZ/aarch64-linux-android-4.9/
@@ -57,8 +63,8 @@ if [ "$INPUT" == "1" ]; then
         TOOLCHAIN_INFO="GCC 4.9"
     
     elif [ "$TOOL" == "2" ]; then
-        echo "ur chose is GGC 10"
-        
+        echo "ur chose is GCC 10"
+        TOOL=1
         # download toolchain
         git clone https://github.com/arter97/arm64-gcc
         git clone https://github.com/arter97/arm32-gcc
@@ -69,13 +75,17 @@ if [ "$INPUT" == "1" ]; then
         
         # info for push
         TOOLCHAIN_INFO="GCC 10"
+    
+    elif [ "$TOOL" == "3" ]; then
+        
+        git clone --depth=1 https://github.com/kdrag0n/proton-clang.git
         
     fi;
 
 elif [ "$INPUT" == "2" ]; then
 
     DEFCONFIG="begonia_user_defconfig"
-    
+    TOOL="1"
     git clone -b $BRANCH https://github.com/Peppe289/$REPO.git
     DEVICE="Begonia" # info for push
     CHAT_ID="-1001453427722" # Begonia
@@ -104,7 +114,30 @@ export ARCH=arm64 && export SUBARCH=arm64
 START=$(date +"%s")
 cd $REPO
 make O=out $DEFCONFIG
-make O=out -j2 | tee kernel.log
+
+if [ "$TOOL" == "1" ]; then
+    
+    echo " Start with GCC"
+    
+    make O=out -j$(nproc --all) | tee kernel.log
+
+elif [ "$TOOL" == "3" ]; then
+
+    echo "Start with Proton Clang"
+    
+    TOOLCHAIN_INFO="Proton Clang 13"
+    
+    PATH="/home/runner/work/Ubuntu-SSH/Ubuntu-SSH/proton-clang/bin:${PATH}" \
+
+    make -j$(nproc --all) O=out \
+                      ARCH=arm64 \
+                      CC=clang \
+                      CLANG_TRIPLE=aarch64-linux-gnu- \
+                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                      CROSS_COMPILE=aarch64-linux-gnu- | tee kernel.log
+
+fi;                      
+
 END=$(date +"%s")
 DIFF=$(($END - $START))
 
@@ -159,6 +192,8 @@ fi;
 
 cd ..
 rm -rf AnyKernel
+
+
 
 
 
