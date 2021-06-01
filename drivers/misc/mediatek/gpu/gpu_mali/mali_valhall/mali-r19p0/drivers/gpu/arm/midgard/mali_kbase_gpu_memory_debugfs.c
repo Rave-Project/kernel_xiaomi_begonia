@@ -22,7 +22,7 @@
 
 #include <mali_kbase.h>
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 
 #ifdef ENABLE_MTK_MEMINFO
 #include <platform/mtk_platform_common.h>

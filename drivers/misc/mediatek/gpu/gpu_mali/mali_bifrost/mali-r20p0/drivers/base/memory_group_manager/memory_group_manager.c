@@ -26,7 +26,7 @@
 #include <linux/platform_device.h>
 #include <linux/version.h>
 #include <linux/module.h>
-#ifdef CONFIG_DEBUG_FS
+#if 0
 #include <linux/debugfs.h>
 #endif
 #include <linux/mm.h>
@@ -92,12 +92,12 @@ struct mgm_group {
 struct mgm_groups {
 	struct mgm_group groups[MEMORY_GROUP_MANAGER_NR_GROUPS];
 	struct device *dev;
-#ifdef CONFIG_DEBUG_FS
+#if 0
 	struct dentry *mgm_debugfs_root;
 #endif
 };
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 
 static int mgm_size_get(void *data, u64 *val)
 {

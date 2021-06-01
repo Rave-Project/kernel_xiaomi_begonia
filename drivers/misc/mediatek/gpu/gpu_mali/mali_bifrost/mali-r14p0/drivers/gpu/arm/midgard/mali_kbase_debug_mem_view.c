@@ -30,7 +30,7 @@
 #include <linux/list.h>
 #include <linux/file.h>
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 
 struct debug_mem_mapping {
 	struct list_head node;

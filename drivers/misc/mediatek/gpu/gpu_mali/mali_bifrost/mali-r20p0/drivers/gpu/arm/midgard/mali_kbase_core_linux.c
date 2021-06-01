@@ -348,7 +348,7 @@ static void kbase_file_delete(struct kbase_file *const kfile)
 	if (atomic_read(&kfile->setup_state) == KBASE_FILE_COMPLETE) {
 		struct kbase_context *kctx = kfile->kctx;
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 		kbasep_mem_profile_debugfs_remove(kctx);
 #endif
 
@@ -552,7 +552,7 @@ void kbase_release_device(struct kbase_device *kbdev)
 }
 EXPORT_SYMBOL(kbase_release_device);
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0) && \
 		!(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 28) && \
 		LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0))
@@ -669,7 +669,7 @@ static int kbase_file_create_kctx(struct kbase_file *const kfile,
 {
 	struct kbase_device *kbdev = NULL;
 	struct kbase_context *kctx = NULL;
-#ifdef CONFIG_DEBUG_FS
+#if 0
 	char kctx_name[64];
 #endif
 
@@ -700,7 +700,7 @@ static int kbase_file_create_kctx(struct kbase_file *const kfile,
 	if (kbdev->infinite_cache_active_default)
 		kbase_ctx_flag_set(kctx, KCTX_INFINITE_CACHE);
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 	snprintf(kctx_name, 64, "%d_%d", kctx->tgid, kctx->id);
 
 	kctx->kctx_dentry = debugfs_create_dir(kctx_name,
@@ -3164,7 +3164,7 @@ static DEVICE_ATTR(js_ctx_scheduling_mode, S_IRUGO | S_IWUSR,
 		set_js_ctx_scheduling_mode);
 
 #ifdef MALI_KBASE_BUILD
-#ifdef CONFIG_DEBUG_FS
+#if 0
 
 /* Number of entries in serialize_jobs_settings[] */
 #define NR_SERIALIZE_JOBS_SETTINGS 5
@@ -3654,7 +3654,7 @@ static void power_control_term(struct kbase_device *kbdev)
 }
 
 #ifdef MALI_KBASE_BUILD
-#ifdef CONFIG_DEBUG_FS
+#if 0
 
 static void trigger_quirks_reload(struct kbase_device *kbdev)
 {

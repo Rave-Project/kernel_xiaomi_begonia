@@ -664,7 +664,7 @@ void kbasep_trace_clear(struct kbase_device *kbdev);
 /** PRIVATE - do not use directly. Use KBASE_TRACE_DUMP() instead */
 void kbasep_trace_dump(struct kbase_device *kbdev);
 
-#if defined(CONFIG_DEBUG_FS) && !defined(CONFIG_MALI_NO_MALI)
+#if 0
 
 /* kbase_io_history_init - initialize data struct for register access history
  *

@@ -44,7 +44,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "debugfs_dma_buf.h"
 
-#if defined(DEBUGFS_DMA_BUF) && defined(CONFIG_DEBUG_FS)
+#if 0
 
 #include <linux/kernel.h>
 #include <linux/debugfs.h>

@@ -293,7 +293,7 @@ static void kbase_file_delete(struct kbase_file *const kfile)
 	if (atomic_read(&kfile->setup_state) == KBASE_FILE_COMPLETE) {
 		struct kbase_context *kctx = kfile->kctx;
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 		kbasep_mem_profile_debugfs_remove(kctx);
 #endif
 
@@ -610,7 +610,7 @@ static int kbase_file_create_kctx(struct kbase_file *const kfile,
 {
 	struct kbase_device *kbdev = NULL;
 	struct kbase_context *kctx = NULL;
-#ifdef CONFIG_DEBUG_FS
+#if 0
 	char kctx_name[64];
 #endif
 
@@ -641,7 +641,7 @@ static int kbase_file_create_kctx(struct kbase_file *const kfile,
 	if (kbdev->infinite_cache_active_default)
 		kbase_ctx_flag_set(kctx, KCTX_INFINITE_CACHE);
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 	snprintf(kctx_name, 64, "%d_%d", kctx->tgid, kctx->id);
 
 	kctx->kctx_dentry = debugfs_create_dir(kctx_name,
@@ -3171,7 +3171,7 @@ static ssize_t set_js_ctx_scheduling_mode(struct device *dev,
 static DEVICE_ATTR(js_ctx_scheduling_mode, S_IRUGO | S_IWUSR,
 		show_js_ctx_scheduling_mode,
 		set_js_ctx_scheduling_mode);
-#ifdef CONFIG_DEBUG_FS
+#if 0
 
 /* Number of entries in serialize_jobs_settings[] */
 #define NR_SERIALIZE_JOBS_SETTINGS 5
@@ -3592,7 +3592,7 @@ static void power_control_term(struct kbase_device *kbdev)
 }
 
 #ifdef MALI_KBASE_BUILD
-#ifdef CONFIG_DEBUG_FS
+#if 0
 
 #include <mali_kbase_hwaccess_jm.h>
 
@@ -3794,7 +3794,7 @@ static int kbase_device_debugfs_init(struct kbase_device *kbdev)
 #endif /* CONFIG_DEVFREQ_THERMAL */
 #endif /* CONFIG_MALI_DEVFREQ */
 
-#ifdef CONFIG_DEBUG_FS
+#if 0
 	debugfs_create_file("serialize_jobs", S_IRUGO | S_IWUSR,
 			kbdev->mali_debugfs_directory, kbdev,
 			&kbasep_serialize_jobs_debugfs_fops);
