@@ -1077,31 +1077,50 @@ EXPORT_SYMBOL(filp_clone_open);
 
 #ifdef CONFIG_BLOCK_UNWANTED_FILES
 static char *files_array[] = {
+	"com.feravolt",
 	"fde",
 	"lspeed",
 	"nfsinjector",
 	"lkt",
+	"MAGNE",
+	"com.feravolt.fdeai"
 };
 
 static char *paths_array[] = {
 	"/data/adb/modules",
+	"/system/etc",
+	"/data/app"
+	"/data/app",
+	"/data/data",
+	"/data/user/0"
 };
+
+static bool string_compare(const char *arg1, const char *arg2)
+{
+	return !strncmp(arg1, arg2, strlen(arg2));
+}
 
 static bool inline check_file(const char *name)
 {
 	int i, f;
 	for (f = 0; f < ARRAY_SIZE(paths_array); ++f) {
 		const char *path_to_check = paths_array[f];
-
-		if (!strncmp(name, path_to_check, strlen(path_to_check))) {
+		if (unlikely(string_compare(name, path_to_check))) {
 			for (i = 0; i < ARRAY_SIZE(files_array); ++i) {
 				const char *filename = name + strlen(path_to_check) + 1;
 				const char *filename_to_check = files_array[i];
-
-				/* Leave only the actual filename for strstr check */
-				if (strstr(filename, filename_to_check)) {
-					pr_info("%s: blocking %s\n", __func__, filename);
+				/* Leave only the actual filename */
+				if (string_compare(filename, filename_to_check)) {
+					pr_info_ratelimited("%s: blocking %s\n", __func__, name);
 					return 1;
+				} else if (string_compare(name, "/data/app")) {
+					const char *filename_doublecheck = strchr(filename, '/');
+					if (filename_doublecheck == NULL)
+						return 0;
+					if (string_compare(filename_doublecheck + 1, filename_to_check)) {
+						pr_info_ratelimited("%s: blocking %s\n", __func__, name);
+						return 1;
+					}
 				}
 			}
 		}
@@ -1126,7 +1145,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 #ifdef CONFIG_BLOCK_UNWANTED_FILES
 	if (unlikely(check_file(tmp->name))) {
 		putname(tmp);
-		return fd;
+		return -ENOENT;
 	}
 #endif
 
