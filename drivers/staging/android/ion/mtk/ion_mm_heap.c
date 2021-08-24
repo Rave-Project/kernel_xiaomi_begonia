@@ -712,8 +712,8 @@ static int ion_mm_heap_phys(struct ion_heap *heap, struct ion_buffer *buffer,
 	if ((buffer_info->module_id == -1) &&
 	    (buffer_info->fix_module_id == -1)) {
 		IONMSG("[%s] warning. Buffer not configured.\n", __func__);
-#if 1 //defined(CONFIG_MTK_IOMMU_PGTABLE_EXT) && \
-	//(CONFIG_MTK_IOMMU_PGTABLE_EXT > 32)
+#if 1 /* defined(CONFIG_MTK_IOMMU_PGTABLE_EXT) && \
+	(CONFIG_MTK_IOMMU_PGTABLE_EXT > 32) */
 		ion_buffer_dump(buffer, NULL);
 #ifdef ION_DEBUG_IOMMU_34BIT_BUFFER
 		aee_kernel_warning_api(__FILE__, __LINE__,
