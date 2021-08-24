@@ -32,19 +32,6 @@
 #include <linux/ioctl.h>
 #define LOG_MYTAG	"Power/Alarm"
 
-#define ANDROID_ALARM_PRINT_INFO BIT(0)
-#define ANDROID_ALARM_PRINT_IO BIT(1)
-#define ANDROID_ALARM_PRINT_INT BIT(2)
-
-static int debug_mask = ANDROID_ALARM_PRINT_INFO;
-module_param_named(debug_mask, debug_mask, int, 0664);
-
-#define alarm_dbg(debug_level_mask, fmt, args...) \
-do {									\
-	if (debug_mask & ANDROID_ALARM_PRINT_##debug_level_mask)	\
-		pr_debug(LOG_MYTAG fmt, ##args); \
-} while (0)
-
 #define ANDROID_ALARM_WAKEUP_MASK ( \
 	ANDROID_ALARM_RTC_WAKEUP_MASK | \
 	ANDROID_ALARM_ELAPSED_REALTIME_WAKEUP_MASK)
@@ -102,8 +89,6 @@ void alarm_set_power_on(struct timespec new_pwron_time, bool logo)
 	struct rtc_wkalrm alm;
 	struct rtc_device *alarm_rtc_dev;
 
-	alarm_dbg(INFO, "alarm set power on\n");
-
 #ifdef RTC_PWRON_SEC
 	/* round down the second */
 	new_pwron_time.tv_sec = (new_pwron_time.tv_sec / 60) * 60;
@@ -140,7 +125,6 @@ static void alarm_clear(enum android_alarm_type alarm_type, struct timespec *ts)
 	u32 alarm_type_mask = 1U << alarm_type;
 	unsigned long flags;
 
-	alarm_dbg(IO, "alarm %d clear\n", alarm_type);
 	if (alarm_type == ANDROID_ALARM_POWER_ON ||
 	    alarm_type == ANDROID_ALARM_POWER_ON_LOGO) {
 		ts->tv_sec = 0;
@@ -186,7 +170,6 @@ static int alarm_wait(void)
 	int rv = 0;
 
 	spin_lock_irqsave(&alarm_slock, flags);
-	alarm_dbg(IO, "alarm wait\n");
 	if (!alarm_pending && wait_pending) {
 		__pm_relax(&alarm_wake_lock);
 		wait_pending = 0;
@@ -267,9 +250,6 @@ static long alarm_do_ioctl(struct file *file, unsigned int cmd,
 	unsigned long flags;
 	enum android_alarm_type alarm_type = ANDROID_ALARM_IOCTL_TO_TYPE(cmd);
 
-	alarm_dbg(INFO, "%s cmd:%d type:%d (%lu)\n", __func__,
-		  cmd, alarm_type, (uintptr_t)file->private_data);
-
 	if (alarm_type >= ANDROID_ALARM_TYPE_COUNT &&
 	    alarm_type != ANDROID_ALARM_POWER_ON &&
 	    alarm_type != ANDROID_ALARM_POWER_ON_LOGO) {
@@ -285,14 +265,12 @@ static long alarm_do_ioctl(struct file *file, unsigned int cmd,
 			spin_lock_irqsave(&alarm_slock, flags);
 			if (alarm_opened) {
 				spin_unlock_irqrestore(&alarm_slock, flags);
-				alarm_dbg(INFO, "%s EBUSY\n", __func__);
 				file->private_data = NULL;
 				return -EBUSY;
 			}
 			alarm_opened = 1;
 			file->private_data = (void *)1;
 			spin_unlock_irqrestore(&alarm_slock, flags);
-			alarm_dbg(INFO, "%s opened\n", __func__);
 		}
 	}
 
@@ -427,7 +405,6 @@ static long alarm_compat_ioctl(struct file *file,
 static int alarm_open(struct inode *inode, struct file *file)
 {
 	file->private_data = NULL;
-	alarm_dbg(INFO, "%s (%d:%d)\n", __func__, current->tgid, current->pid);
 	return 0;
 }
 
@@ -442,10 +419,6 @@ static int alarm_release(struct inode *inode, struct file *file)
 			u32 alarm_type_mask = 1U << i;
 
 			if (alarm_enabled & alarm_type_mask) {
-				alarm_dbg(INFO,
-					  "%s: clear alarm, pending %d\n",
-					  __func__,
-					  !!(alarm_pending & alarm_type_mask));
 				alarm_enabled &= ~alarm_type_mask;
 			}
 			spin_unlock_irqrestore(&alarm_slock, flags);
@@ -453,9 +426,6 @@ static int alarm_release(struct inode *inode, struct file *file)
 			spin_lock_irqsave(&alarm_slock, flags);
 		}
 		if (alarm_pending | wait_pending) {
-			if (alarm_pending)
-				alarm_dbg(INFO, "%s: clear pending alarms %x\n",
-					  __func__, alarm_pending);
 			__pm_relax(&alarm_wake_lock);
 			wait_pending = 0;
 			alarm_pending = 0;
@@ -463,8 +433,6 @@ static int alarm_release(struct inode *inode, struct file *file)
 		alarm_opened = 0;
 	}
 	spin_unlock_irqrestore(&alarm_slock, flags);
-	alarm_dbg(INFO, "%s (%d:%d)(%lu)\n", __func__,
-		  current->tgid, current->pid, (uintptr_t)file->private_data);
 	return 0;
 }
 
@@ -473,7 +441,6 @@ static void devalarm_triggered(struct devalarm *alarm)
 	unsigned long flags;
 	u32 alarm_type_mask = 1U << alarm->type;
 
-	alarm_dbg(INT, "%s: type %d\n", __func__, alarm->type);
 	spin_lock_irqsave(&alarm_slock, flags);
 	if (alarm_enabled & alarm_type_mask) {
 		__pm_wakeup_event(&alarm_wake_lock, 5000);	/* 5secs */
@@ -488,7 +455,6 @@ static enum hrtimer_restart devalarm_hrthandler(struct hrtimer *hrt)
 {
 	struct devalarm *devalrm = container_of(hrt, struct devalarm, u.hrt);
 
-	alarm_dbg(INT, "%s\n", __func__);
 	devalarm_triggered(devalrm);
 	return HRTIMER_NORESTART;
 }
@@ -498,7 +464,6 @@ static enum alarmtimer_restart devalarm_alarmhandler(struct alarm *alrm,
 {
 	struct devalarm *devalrm = container_of(alrm, struct devalarm, u.alrm);
 
-	alarm_dbg(INT, "%s\n", __func__);
 	devalarm_triggered(devalrm);
 	return ALARMTIMER_NORESTART;
 }
