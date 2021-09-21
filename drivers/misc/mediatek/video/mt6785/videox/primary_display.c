@@ -124,10 +124,6 @@ static UINT32 afbc_frame_buf_size;
 #define _DEBUG_DITHER_HANG_
 
 #define FRM_UPDATE_SEQ_CACHE_NUM (DISP_INTERNAL_BUFFER_COUNT+1)
-#if 0
-static struct disp_internal_buffer_info
-	*decouple_buffer_info[DISP_INTERNAL_BUFFER_COUNT];
-#endif
 static struct RDMA_CONFIG_STRUCT decouple_rdma_config;
 static struct WDMA_CONFIG_STRUCT decouple_wdma_config;
 static struct disp_mem_output_config mem_config;
@@ -141,9 +137,6 @@ static unsigned int gPresentFenceIndex;
 unsigned int gTriggerDispMode;
 static unsigned int g_keep;
 static unsigned int g_skip;
-#if 0 //def CONFIG_TRUSTONIC_TRUSTED_UI
-static struct switch_dev disp_switch_data;
-#endif
 static int osc_last_stat;
 static bool has_rsz_input;
 static bool has_yuv_input;
@@ -151,19 +144,7 @@ static bool has_yuv_input;
 static uint display_framerate_main;
 static uint display_framerate_ext;
 
-#if 0
-/* global variable for idle manager */
-static unsigned long long idlemgr_last_kick_time = ~(0ULL);
-static int session_mode_before_enter_idle;
-static int is_primary_idle;
-static struct task_struct *primary_display_idlemgr_task;
-static DECLARE_WAIT_QUEUE_HEAD(idlemgr_wait_queue);
-#endif
-
 static struct hrtimer cmd_mode_update_timer;
-#if 0 /* defined but not used */
-static ktime_t cmd_mode_update_timer_period;
-#endif
 static int is_fake_timer_inited;
 
 static struct task_struct *primary_display_switch_dst_mode_task;
@@ -705,14 +686,7 @@ static int primary_show_basic_debug_info(struct disp_frame_cfg_t *cfg)
 
 		dst_layer_id = max(dst_layer_id, cfg->input_cfg[i].layer_id);
 	}
-/* Temporary remove function call due to improper parameter type */
-#if 0
-	dynamic_debug_msg_print((phys_addr_t)
-				cfg->input_cfg[dst_layer_id].src_phy_addr,
-				cfg->input_cfg[dst_layer_id].tgt_width,
-				cfg->input_cfg[dst_layer_id].tgt_height,
-				cfg->input_cfg[dst_layer_id].src_pitch, 4);
-#endif
+
 	return 0;
 }
 
@@ -748,11 +722,6 @@ struct fps_ext_ctx_t {
 	struct mutex lock;
 	int is_inited;
 } primary_fps_ext_ctx;
-
-#if 0 /* defined but not used */
-static struct task_struct *fps_monitor;
-static int fps_monitor_thread(void *data);
-#endif
 
 static int _fps_ctx_reset(struct fps_ctx_t *fps_ctx, int reserve_num)
 {
@@ -1518,12 +1487,6 @@ static enum hrtimer_restart _DISP_CmdModeTimer_handler(struct hrtimer *timer)
 {
 	DISPMSG("fake timer, wake up\n");
 	dpmgr_signal_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
-#if 0
-	if ((get_current_time_us() - pgc->last_vsync_tick) > 16666) {
-		dpmgr_signal_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
-		pgc->last_vsync_tick = get_current_time_us();
-	}
-#endif
 	hrtimer_forward_now(timer, ns_to_ktime(16666666));
 	return HRTIMER_RESTART;
 }
@@ -1604,22 +1567,6 @@ static void _cmdq_build_trigger_loop(void)
 
 	if (primary_display_is_support_ARR()) {
 		int VFP_PORTCH = pgc->plcm->params->dsi.vertical_frontporch;
-		/*no need restore last dynamic fps when resume*/
-#if 0
-		unsigned int gsync_fps =
-				(pgc->dynamic_fps ? pgc->dynamic_fps : 60);
-		int line_num = pgc->plcm->params->dsi.vertical_frontporch +
-				pgc->plcm->params->dsi.vertical_sync_active +
-				pgc->plcm->params->dsi.vertical_backporch +
-				pgc->plcm->params->dsi.vertical_active_line;
-
-		if (gsync_fps < 60)
-			VFP_PORTCH = (line_num * 60) / gsync_fps - line_num +
-				pgc->plcm->params->dsi.vertical_frontporch;
-
-		DISPINFO("%s,fps=%d,VFP=%d\n",
-			__func__, gsync_fps, VFP_PORTCH);
-#endif
 		cmdqBackupWriteSlot(pgc->dsi_vfp_line, 0, VFP_PORTCH);
 		cmdqBackupWriteSlot(pgc->trigger_record_slot, 0, 0);
 	}
@@ -1825,10 +1772,6 @@ void _cmdq_start_trigger_loop(void)
 	int ret = 0;
 
 	ret = cmdqRecStartLoop(pgc->cmdq_handle_trigger);
-#if 0
-	/*for dump trigger loop cmds*/
-	cmdq_pkt_dump_command(pgc->cmdq_handle_trigger);
-#endif
 	if (!primary_display_is_video_mode()) {
 		if (need_wait_esd_eof()) {
 			/*
@@ -2877,77 +2820,7 @@ static int rdma_mode_switch_to_DL(struct cmdqRecStruct *handle, int block)
 
 	return 0;
 }
-#if 0
-static struct disp_internal_buffer_info *allocat_decouple_buffer(int size)
-{
-	struct disp_internal_buffer_info *buf_info = NULL;
-#ifdef MTK_FB_ION_SUPPORT
-	void *buffer_va = NULL;
-	size_t mva_size = 0;
-	ion_phys_addr_t buffer_mva = 0;
-	struct ion_mm_data mm_data;
-	struct ion_client *client = NULL;
-	struct ion_handle *handle = NULL;
 
-	memset((void *)&mm_data, 0, sizeof(mm_data));
-	if (!g_ion_device) {
-		DISP_PR_ERR("%s:g_ion_device is NULL\n", __func__);
-		return NULL;
-	}
-	client = ion_client_create(g_ion_device, "disp_decouple");
-
-	buf_info = kzalloc(sizeof(*buf_info), GFP_KERNEL);
-	if (!buf_info) {
-		DISP_PR_ERR(
-			"Fatal error, kzalloc internal buffer info failed!\n");
-		kfree(buf_info);
-		return NULL;
-	}
-
-	handle = ion_alloc(client, size, 0, ION_HEAP_MULTIMEDIA_MASK, 0);
-	if (IS_ERR(handle)) {
-		DISP_PR_ERR("Fatal Error, ion_alloc for size %d failed\n",
-			     size);
-		goto err;
-	}
-
-	buffer_va = ion_map_kernel(client, handle);
-	if (buffer_va == NULL) {
-		DISP_PR_ERR("ion_map_kernrl failed\n");
-		goto err;
-	}
-
-	mm_data.config_buffer_param.kernel_handle = handle;
-	mm_data.mm_cmd = ION_MM_CONFIG_BUFFER;
-	if (ion_kernel_ioctl(client, ION_CMD_MULTIMEDIA,
-			     (unsigned long)&mm_data) < 0) {
-		DISP_PR_ERR("ion_test_drv: Config buffer failed.\n");
-		goto err;
-	}
-
-	ion_phys(client, handle, &buffer_mva, &mva_size);
-	if (buffer_mva == 0) {
-		DISP_PR_ERR("Fatal Error, get mva failed\n");
-		goto err;
-	}
-
-	buf_info->handle = handle;
-	buf_info->mva = (uint32_t)buffer_mva;
-	buf_info->size = mva_size;
-	buf_info->va = buffer_va;
-#endif /* MTK_FB_ION_SUPPORT */
-
-	return buf_info;
-
-#ifdef MTK_FB_ION_SUPPORT
-err:
-	ion_free(client, handle);
-	ion_client_destroy(client);
-#endif
-	kfree(buf_info);
-	return NULL;
-}
-#endif
 static int init_decouple_buffers(void)
 {
 	int i = 0;
@@ -2960,10 +2833,6 @@ static int init_decouple_buffers(void)
 
 	/* INTERNAL Buf 3 frames */
 	for (i = 0; i < DISP_INTERNAL_BUFFER_COUNT; i++) {
-#if 0
-		decouple_buffer_info[i] = allocat_decouple_buffer(buffer_size);
-		if (decouple_buffer_info[i])
-#endif
 			pgc->dc_buf[i] = i * buffer_size +
 				primary_display_get_frame_buffer_mva_address();
 	}
@@ -3064,10 +2933,6 @@ static int _convert_disp_input_to_ovl(struct OVL_CONFIG_STRUCT *dst,
 	 * we need to enable const_bld
 	 */
 	ufmt_disable_X_channel(tmp_fmt, &dst->fmt, &dst->const_bld);
-#if 0
-	if (tmp_fmt != dst->fmt)
-		force_disable_alpha = 1;
-#endif
 	Bpp = UFMT_GET_Bpp(dst->fmt);
 
 	dst->addr = (unsigned long)(src->src_phy_addr);
@@ -3648,19 +3513,7 @@ static int decouple_update_rdma_config(void)
 	_primary_path_unlock(__func__);
 	return ret;
 }
-#if 0
-void _invoke_fps_chg_callbacks(unsigned int new_fps)
-{
-	unsigned int i = 0;
 
-	DISPMSG("%s,new_fps =%d\n", __func__, new_fps);
-
-	for (i = 0; i < DISP_MAX_FPSCHG_CALLBACK; i++) {
-		if (fps_chg_callback_table[i])
-			fps_chg_callback_table[i](new_fps);
-	}
-}
-#endif
 static int _ovl_fence_release_callback(unsigned long userdata)
 {
 	int i = 0;
@@ -4020,12 +3873,6 @@ static int _present_fence_release_worker_thread(void *data)
 		if (!islcmconnected && !primary_display_is_video_mode()) {
 			DISPCHECK("LCM Not Connected && CMD Mode\n");
 			msleep(20);
-#if 0
-		/*ToDo: ARR not need waiting until sof?*/
-		} else if (disp_helper_get_option(DISP_OPT_ARR_PHASE_1)) {
-			dpmgr_wait_event(pgc->dpmgr_handle,
-					 DISP_PATH_EVENT_FRAME_START);
-#endif
 		} else {
 			dpmgr_wait_event(pgc->dpmgr_handle,
 					 DISP_PATH_EVENT_IF_VSYNC);
@@ -4590,13 +4437,6 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps,
 			dpmgr_map_event_to_irq(pgc->dpmgr_handle,
 					       DISP_PATH_EVENT_IF_VSYNC,
 					       DDP_IRQ_RDMA0_DONE);
-#if 0
-			if (disp_helper_get_option(DISP_OPT_ARR_PHASE_1)) {
-				dpmgr_map_event_to_irq(pgc->dpmgr_handle,
-						DISP_PATH_EVENT_FRAME_START,
-						DDP_IRQ_RDMA0_START);
-			}
-#endif
 		}
 	}
 
@@ -5095,9 +4935,6 @@ int primary_display_suspend(void)
 	while (primary_get_state() == DISP_BLANK) {
 		_primary_path_unlock(__func__);
 		DISPCHECK("%s wait tui finish!!\n", __func__);
-#if 0 //def CONFIG_TRUSTONIC_TRUSTED_UI
-		switch_set_state(&disp_switch_data, DISP_SLEPT);
-#endif
 		primary_display_wait_state(DISP_ALIVE, MAX_SCHEDULE_TIMEOUT);
 		_primary_path_lock(__func__);
 		DISPCHECK("%s wait tui done stat=%d\n", __func__,
@@ -5598,15 +5435,6 @@ int primary_display_resume(void)
 		dpmgr_enable_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
 
 		dpmgr_path_trigger(pgc->dpmgr_handle, NULL, CMDQ_DISABLE);
-#if 0
-		if (disp_helper_get_option(DISP_OPT_ARR_PHASE_1)) {
-			dpmgr_map_event_to_irq(pgc->dpmgr_handle,
-					       DISP_PATH_EVENT_FRAME_START,
-					       DDP_IRQ_RDMA0_START);
-			dpmgr_enable_event(pgc->dpmgr_handle,
-					   DISP_PATH_EVENT_FRAME_START);
-		}
-#endif
 
 	}
 
@@ -5692,9 +5520,6 @@ int primary_display_resume(void)
 
 done:
 	primary_set_state(DISP_ALIVE);
-#if 0 //def CONFIG_TRUSTONIC_TRUSTED_UI
-	switch_set_state(&disp_switch_data, DISP_ALIVE);
-#endif
 
 	/* need enter share sram for resume */
 	if (disp_helper_get_option(DISP_OPT_SHARE_SRAM))
@@ -6912,26 +6737,6 @@ static int _config_ovl_input(struct disp_frame_cfg_t *cfg,
 
 	overlap_num = cfg->hrt_weight;
 	DISPINFO("get overlap_num from CFG %d\n", overlap_num);
-#if 0
-#ifdef MTK_FB_MMDVFS_SUPPORT
-	/* TODO: Set Vcore Level here. */
-	if (hrt_level > HRT_LEVEL_NUM - 1)
-		DISPCHECK("overlayed layer num is %d > %d\n",
-			  hrt_level, HRT_LEVEL_NUM - 1);
-	if ((hrt_level - dvfs_last_ovl_req) > 0 &&
-	    (!primary_display_is_decouple_mode()))
-		primary_display_request_dvfs_perf(MMDVFS_SCEN_DISP, hrt_level);
-
-	dvfs_last_ovl_req = hrt_level;
-#endif
-
-	if (disp_helper_get_option(DISP_OPT_SHOW_VISUAL_DEBUG_INFO)) {
-		char msg[10];
-
-		snprintf(msg, sizeof(msg), "HRT=%d,", hrt_level);
-		screen_logger_add_message("HRT", MESSAGE_REPLACE, msg);
-	}
-#endif
 
 	if (_should_wait_path_idle())
 		dpmgr_wait_event_timeout(disp_handle,
@@ -8168,18 +7973,6 @@ int primary_display_force_set_fps(unsigned int keep, unsigned int skip)
 
 unsigned int primary_display_force_get_vsync_fps(void/*int need_lock*/)
 {
-#if 0
-	if (primary_display_is_idle()) {
-		DISPMSG("%s=50, currently it is idle\n", __func__);
-
-		if (pgc->plcm->params->min_refresh_rate != 0)
-			return pgc->plcm->params->min_refresh_rate;
-	} else if (primary_display_is_support_ARR()) {
-		DISPMSG("%s=%d, not idle and support ARR\n",
-			__func__, pgc->dynamic_fps);
-		return pgc->dynamic_fps;
-	}
-#endif
 	/*ToDo: ARR, need add lock?*/
 	if (primary_display_is_support_ARR()) {
 		DISPMSG("%s=%d\n",
@@ -9196,31 +8989,6 @@ UINT32 DISP_GetFBRamSize(void)
 
 UINT32 DISP_GetVRamSize(void)
 {
-#if 0
-	/* Use a local static variable to cache the calculated vram size */
-	static UINT32 vramSize;
-
-	if (vramSize == 0) {
-		disp_drv_init_context();
-
-		/* get framebuffer size */
-		vramSize = DISP_GetFBRamSize();
-
-		/* get DXI working buffer size */
-		vramSize += disp_if_drv->get_working_buffer_size();
-
-		/* get assertion layer buffer size */
-		vramSize += DAL_GetLayerSize();
-
-		/* Align vramSize to 1MB */
-		vramSize = ALIGN_TO_POW_OF_2(vramSize, 0x100000);
-
-		DISP_LOG("%s: %u bytes\n", __func__, vramSize);
-	}
-
-	return vramSize;
-#endif
-
 	return 0;
 }
 
@@ -10211,42 +9979,12 @@ unsigned int primary_display_get_idle_interval(unsigned int fps)
 {
 
 	unsigned int idle_interval = idle_check_interval;
-	/*calculate the timeout to enter idle in ms*/
-#if 0
-	float frame_inteval = (float)1000 / fps;
-
-	idle_interval = (unsigned int)(3 * frame_inteval + 1);
-#endif
 
 	idle_interval = (3 * 1000) / fps + 1;
 
 	DISPMSG("[fps]:%s,[fps->idle interval][%d fps->%d ms]\n",
 		__func__, fps, idle_interval);
 
-#if 0
-	/*ToDo: ARR whether need tune out idle interval*/
-	struct LCM_PARAMS *params;
-	unsigned int i = 0;
-	unsigned int fps_levels = 0;
-
-	params = pgc->plcm->params;
-	fps_levels = (params->dsi).dynamic_fps_levels;
-
-	/*look up table for idle interval related to fps*/
-	for (i = 0; i < fps_levels; i++) {
-		if (fps == (params->dsi).dynamic_fps_table[i].fps) {
-			idle_interval =
-			(params->dsi).dynamic_fps_table[i].idle_check_interval;
-			DISPMSG("[fps] %d fps <-> %d ms\n",
-				fps, idle_interval);
-			break;
-		}
-	}
-	if (i == fps_levels) {
-		DISPCHECK("[fps]%s no %d entry,use 50ms\n",
-			__func__, fps);
-	}
-#endif
 	return idle_interval;
 }
 
@@ -10513,26 +10251,10 @@ void _primary_display_arr_send_lcm_cmd(
 			/* 5. trigger path */
 			dpmgr_path_trigger(primary_get_dpmgr_handle(),
 				qhandle, CMDQ_ENABLE);
-#if 0
-			/*Todo: maybe can split to two flush*/
-			ret = cmdqRecFlushAsyncCallback(qhandle,
-				_arr_lcm_cmd_send_callback, from_fps);
-			mmprofile_log_ex(
-			ddp_mmp_get_events()->primary_chg_fps_send_lcm_cmd,
-			MMPROFILE_FLAG_PULSE, from_fps, to_fps);
-#endif
 
 		}
 		if (disp_lcm_arr_need_inform_lcm(
 				pgc->plcm, LCM_DFPS_FRAME_CUR)) {
-#if 0
-
-			/*Todo: for split to flush*/
-			mmprofile_log_ex(
-			ddp_mmp_get_events()->primary_chg_fps_send_lcm_cmd,
-			MMPROFILE_FLAG_START, from_fps, to_fps);
-			cmdqRecReset(qhandle);
-#endif
 
 			/* 6.send current frame cmd */
 			/*clear VFP changed token first*/
@@ -10562,14 +10284,6 @@ void _primary_display_arr_send_lcm_cmd(
 			/* 10. trigger path */
 			dpmgr_path_trigger(primary_get_dpmgr_handle(),
 				qhandle, CMDQ_ENABLE);
-#if 0
-			/*Todo: for split two flush*/
-			ret = cmdqRecFlushAsyncCallback(qhandle,
-				_arr_lcm_cmd_send_callback, from_fps);
-			mmprofile_log_ex(
-			ddp_mmp_get_events()->primary_chg_fps_send_lcm_cmd,
-			MMPROFILE_FLAG_PULSE, from_fps, to_fps);
-#endif
 
 		}
 
@@ -10580,55 +10294,6 @@ void _primary_display_arr_send_lcm_cmd(
 		mmprofile_log_ex(
 		ddp_mmp_get_events()->primary_chg_fps_send_lcm_cmd,
 		MMPROFILE_FLAG_PULSE, from_fps, to_fps);
-	} else if (
-		send_lcm_cmd_way == LCM_DFPS_SEND_CMD_VFP) {
-#if 0
-		/*Todo: need test*/
-		struct cmdqRecStruct *qhandle = NULL;
-
-		DISPMSG("[DFPS]%s, send cmd during vfp\n", __func__);
-		/* 0.create esd check cmdq
-		 * send lcm cmd thread priority
-		 * should be lower then config thread
-		 * and higher than trigger loop  thread
-		 * we choose esd_check thread
-		 */
-		ret = cmdqRecCreate(
-			CMDQ_SCENARIO_DISP_ESD_CHECK, &qhandle);
-		if (ret) {
-			DISP_PR_INFO("%s:%d, create cmdq handle fail!ret=%d\n",
-				    __func__, __LINE__, ret);
-			return;
-		}
-		cmdqRecReset(qhandle);
-		/* 1. waitNoClear EOF*/
-		cmdqRecWaitNoClear(qhandle,
-			CMDQ_EVENT_MUTEX0_STREAM_EOF);
-
-		if (disp_lcm_arr_need_inform_lcm(
-				pgc->plcm, LCM_DFPS_FRAME_PREV)) {
-			/* 2.send cmd to lcm */
-			disp_lcm_arr_send_cmd(
-				pgc->plcm, send_lcm_cmd_way, qhandle,
-				from_fps, to_fps, LCM_DFPS_FRAME_PREV);
-		}
-
-		if (disp_lcm_arr_need_inform_lcm(
-				pgc->plcm, LCM_DFPS_FRAME_CUR)) {
-			/* 3.send current frame cmd */
-			cmdqRecWaitNoClear(qhandle,
-				CMDQ_EVENT_DISP_RDMA0_SOF);
-			cmdqRecWaitNoClear(qhandle,
-				CMDQ_EVENT_MUTEX0_STREAM_EOF);
-
-			/* 4.send cmd to lcm */
-			disp_lcm_arr_send_cmd(
-				pgc->plcm, send_lcm_cmd_way, qhandle,
-				from_fps, to_fps, LCM_DFPS_FRAME_CUR);
-		}
-		/* 5.flush instruction */
-		ret = cmdqRecFlushAsync(qhandle);
-#endif
 	}
 }
 
