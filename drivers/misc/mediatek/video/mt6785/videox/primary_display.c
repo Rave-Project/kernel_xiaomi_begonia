@@ -4386,16 +4386,12 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps,
 					_disp_primary_path_check_trigger,
 					NULL, "display_check_aal");
 		wake_up_process(primary_path_aal_task);
-	}
 
-	if (disp_helper_get_stage() == DISP_HELPER_STAGE_NORMAL) {
 		primary_delay_trigger_task = kthread_create(
 				_disp_primary_path_check_trigger_delay_33ms,
 				NULL, "disp_delay_trigger");
 		wake_up_process(primary_delay_trigger_task);
-	}
 
-	if (disp_helper_get_stage() == DISP_HELPER_STAGE_NORMAL) {
 		primary_od_trigger_task = kthread_create(
 					_disp_primary_path_check_trigger_od,
 					NULL, "disp_od_trigger");
