@@ -857,7 +857,7 @@ static unsigned int _fps_ctx_get_avg_fps_ext(struct fps_ctx_t *fps_ctx,
 	return avg_fps;
 }
 
-static int fps_ctx_update(struct fps_ctx_t *fps_ctx)
+static void fps_ctx_update(struct fps_ctx_t *fps_ctx)
 {
 	unsigned int abs_fps, avg_fps;
 	unsigned long long ns = sched_clock();
@@ -882,7 +882,6 @@ static int fps_ctx_update(struct fps_ctx_t *fps_ctx)
 	mmprofile_log_ex(ddp_mmp_get_events()->fps_set, MMPROFILE_FLAG_PULSE,
 			 abs_fps, fps_ctx->cur_wnd_sz);
 	mutex_unlock(&fps_ctx->lock);
-	return 0;
 }
 
 static int fps_ctx_get_fps(struct fps_ctx_t *fps_ctx, unsigned int *fps,
