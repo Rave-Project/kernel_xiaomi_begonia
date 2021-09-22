@@ -126,40 +126,30 @@ static int mtkfb_release(struct fb_info *info, int user)
 static int mtkfb_setcolreg(u_int regno, u_int red, u_int green,
 			   u_int blue, u_int transp, struct fb_info *info)
 {
-	int r = 0;
-	unsigned int bpp, m;
+	unsigned int m;
 
 	/* NOT_REFERENCED(transp); */
-	bpp = info->var.bits_per_pixel;
-	m = 1 << bpp;
-	if (regno >= m) {
-		r = -EINVAL;
-		goto exit;
-	}
+	m = 1 << info->var.bits_per_pixel;
+	if (regno >= m)
+		return -EINVAL;
 
-	switch (bpp) {
-	case 16:
+	if (info->var.bits_per_pixel == 16) {
 		/* RGB 565 */
 		((u32 *) (info->pseudo_palette))[regno] =
 		    ((red & 0xF800) | ((green & 0xFC00) >> 5) |
 		    ((blue & 0xF800) >> 11));
-		break;
-	case 32:
+	} else if (info->var.bits_per_pixel == 32) {
 		/* ARGB8888 */
 		((u32 *) (info->pseudo_palette))[regno] =
 		    (0xff000000) |
 		    ((red & 0xFF00) << 8) | ((green & 0xFF00)) |
 		    ((blue & 0xFF00) >> 8);
-		break;
-
+	} else {
 		/* TODO: RGB888, BGR888, ABGR8888 */
-
-	default:
-		pr_info("set color info fail, bpp=%d\n", bpp);
+		pr_info("set color info fail, bpp=%d\n", info->var.bits_per_pixel);
 	}
 
-exit:
-	return r;
+	return 0;
 }
 
 
