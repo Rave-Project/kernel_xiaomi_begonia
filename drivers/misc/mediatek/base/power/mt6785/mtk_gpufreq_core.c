@@ -42,6 +42,9 @@
 #include "upmu_sw.h"
 #include "upmu_hw.h"
 #include "mtk_dramc.h"
+
+#define MT_GPUFREQ_STATIC_PWR_READY2USE		1
+
 #ifdef CONFIG_THERMAL
 #include "mtk_thermal.h"
 #endif
