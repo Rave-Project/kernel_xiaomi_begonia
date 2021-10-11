@@ -3004,15 +3004,8 @@ static void __mt_gpufreq_setup_opp_table(
 				freqs[i].gpufreq_vsram);
 	}
 
-	/* setup OPP table by device ID */
-	if (g_segment_id == MT6785T_SEGMENT)
-		g_segment_max_opp_idx = 0;
-	else if (g_segment_id == MT6785_SEGMENT)
-		g_segment_max_opp_idx = 9;
-	else if (g_segment_id == MT6783_SEGMENT)
-		g_segment_max_opp_idx = 18;
-	else
-		g_segment_max_opp_idx = 3;
+	/* setup OPP table with max freq (850 Mhz) */
+	g_segment_max_opp_idx = 0;
 
 	g_segment_min_opp_idx = NUM_OF_OPP_IDX - 1;
 
